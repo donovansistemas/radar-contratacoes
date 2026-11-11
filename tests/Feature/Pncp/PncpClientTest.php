@@ -123,9 +123,20 @@ it('não repete erro de cliente e propaga a mensagem do PNCP', function () {
     Http::assertSentCount(1);
 });
 
-it('repete quando o PNCP devolve erro de servidor', function () {
-    Http::fake(['*' => Http::sequence()
+it('repete quando o PNCP devolve erro de servidor', function () {    Http::fake(['*' => Http::sequence()
         ->push('erro interno', 500)
+        ->push($this->payload, 200)]);
+
+    $pagina = $this->client->contratacoesComProposta(['dataFinal' => '20261210']);
+
+    expect($pagina->items)->toHaveCount(3);
+
+    Http::assertSentCount(2);
+});
+
+it('repete quando o PNCP pede calma (429)', function () {
+    Http::fake(['*' => Http::sequence()
+        ->push('Too Many Requests', 429, ['Retry-After' => '1'])
         ->push($this->payload, 200)]);
 
     $pagina = $this->client->contratacoesComProposta(['dataFinal' => '20261210']);

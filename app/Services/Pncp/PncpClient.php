@@ -112,6 +112,19 @@ class PncpClient
                 return ContratacoesPage::fromPayload($resposta->json(), $pagina);
             }
 
+            // 429 é o PNCP pedindo calma. Repetir é exatamente o que ele quer,
+            // respeitando o Retry-After quando vier.
+            if ($resposta->status() === 429) {
+                if ($tentativa >= $this->retryTimes) {
+                    throw PncpException::indisponivel($tentativa, 'HTTP 429 (limite de requisições do PNCP)');
+                }
+
+                $this->aguardar($this->esperaPedidaPeloServidor($resposta, $espera));
+                $espera *= 2;
+
+                continue;
+            }
+
             // 4xx = pedido errado. Repetir não conserta.
             if ($resposta->clientError()) {
                 throw PncpException::requisicaoInvalida($resposta->status(), $this->mensagemDeErro($resposta));
@@ -148,6 +161,21 @@ class PncpClient
         }
 
         return mb_substr(trim($resposta->body()), 0, 200);
+    }
+
+    /**
+     * `Retry-After` vem em segundos. Se não vier, usa o backoff normal.
+     * Teto de 60s: ficar meia hora parado num único pedido não ajuda ninguém.
+     */
+    private function esperaPedidaPeloServidor(Response $resposta, int $padrao): int
+    {
+        $retryAfter = $resposta->header('Retry-After');
+
+        if (is_numeric($retryAfter)) {
+            return min(60, max(1, (int) $retryAfter)) * 1000;
+        }
+
+        return $padrao;
     }
 
     private function aguardar(int $milissegundos): void
