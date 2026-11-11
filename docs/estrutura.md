@@ -173,8 +173,42 @@ Abrir `/oportunidades`:
 3. **`app/Services` não é do framework.** É convenção nossa, criada porque o projeto tem
    regra de negócio que não pertence nem ao model nem à tela.
 
-## O que é do starter kit (não escrevemos)
+## Espelho clássico (MVC) — `/perfis-classico`
 
+A mesma tela de perfis implementada do jeito tradicional, para comparação. **Não substitui a
+versão Livewire**: o produto continua em `/perfis`. Esta existe para mostrar as duas
+arquiteturas lado a lado, com o mesmo comportamento e os mesmos testes de isolamento.
+
+| Arquivo | Papel |
+|---|---|
+| `app/Http/Controllers/PerfilBuscaController.php` | o controller: um método por verbo HTTP |
+| `app/Http/Requests/PerfilBuscaRequest.php` | validação + conversão do formulário |
+| `resources/views/perfis-classico/index.blade.php` | lista |
+| `resources/views/perfis-classico/form.blade.php` | formulário único para criar e editar |
+| `routes/web.php` → `Route::resource` | as 6 rotas REST geradas de uma vez |
+| `tests/Feature/Perfis/PerfilBuscaClassicoTest.php` | 12 testes |
+
+### A mesma preocupação, resolvida nos dois mundos
+
+| Preocupação | Livewire (`/perfis`) | Clássico (`/perfis-classico`) |
+|---|---|---|
+| onde fica a ação | método público no `⚡index.blade.php` | método do controller |
+| validação | `$this->validate([...])` no componente | `FormRequest` |
+| estado do formulário | propriedades públicas + `wire:model` | `old()` + o model |
+| envio | `wire:click` / `wire:submit`, sem recarregar | `POST`/`PUT` real, recarrega a página |
+| resposta ao gravar | re-render parcial | `redirect()->route()->with('status')` |
+| mensagem de sucesso | `Flux::toast()` | `session('status')` no Blade |
+| remover | `wire:click` + `wire:confirm` | `<form>` com `@csrf` + `@method('DELETE')` |
+| listar | `with()` monta os dados | controller passa `$perfis` para a view |
+| id de outro dono | `findOrFail` na relação do usuário | `abort_unless(..., 403)` |
+| teste | `Livewire::test()` | `$this->get/post/put/delete()` |
+| arquivos por tela | **1** | **3** (controller + 2 views) |
+
+O clássico exige mais arquivo e mais código de ligação — `@csrf`, `@method`, `old()`,
+`redirect`, flash. Em troca, cada ação é uma requisição HTTP explícita, fácil de ler em log e
+de cachear.
+
+## O que é do starter kit (não escrevemos)
 `app/Actions/Fortify/`, `app/Concerns/`, `app/Providers/FortifyServiceProvider.php`,
 `app/Livewire/Actions/Logout.php`, `resources/views/pages/auth/`,
 `resources/views/pages/settings/`, `resources/views/layouts/`, e as migrations

@@ -46,6 +46,7 @@ class PerfilBusca extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'palavras_chave' => 'array',
             'palavras_excluidas' => 'array',
             'ufs' => 'array',
