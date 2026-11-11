@@ -142,7 +142,7 @@ new #[Title('Oportunidades')] class extends Component
                                 {{ $contratacao->objeto }}
                             </flux:heading>
 
-                            <flux:text class="mt-1 text-sm text-zinc-500">
+                            <flux:text class="mt-1 line-clamp-2 text-sm text-zinc-500">
                                 {{ $contratacao->orgao_razao_social }}
                                 @if ($contratacao->unidade_nome)
                                     · {{ $contratacao->unidade_nome }}

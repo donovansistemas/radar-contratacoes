@@ -196,10 +196,10 @@ new #[Title('Perfis de busca')] class extends Component
         <flux:table class="mt-6">
             <flux:table.columns>
                 <flux:table.column>Perfil</flux:table.column>
-                <flux:table.column>Palavras-chave</flux:table.column>
-                <flux:table.column>Onde</flux:table.column>
-                <flux:table.column>Valor estimado</flux:table.column>
-                <flux:table.column>Status</flux:table.column>
+                <flux:table.column class="hidden md:table-cell">Palavras-chave</flux:table.column>
+                <flux:table.column class="hidden md:table-cell">Onde</flux:table.column>
+                <flux:table.column class="hidden lg:table-cell">Valor estimado</flux:table.column>
+                <flux:table.column class="hidden lg:table-cell">Status</flux:table.column>
                 <flux:table.column />
             </flux:table.columns>
 
@@ -208,9 +208,21 @@ new #[Title('Perfis de busca')] class extends Component
                     <flux:table.row :key="$perfil->id">
                         <flux:table.cell class="font-medium">
                             {{ $perfil->nome }}
+
+                            {{-- No celular sobram duas colunas; o resto desce para cá. --}}
+                            <div class="mt-1.5 flex flex-wrap items-center gap-1.5 md:hidden">
+                                @foreach (array_slice($perfil->palavras_chave ?? [], 0, 3) as $termo)
+                                    <flux:badge size="sm">{{ $termo }}</flux:badge>
+                                @endforeach
+
+                                <flux:text class="text-xs text-zinc-500">
+                                    {{ empty($perfil->ufs) ? 'Brasil' : implode(', ', $perfil->ufs) }}
+                                    · {{ $perfil->ativo ? 'ativo' : 'inativo' }}
+                                </flux:text>
+                            </div>
                         </flux:table.cell>
 
-                        <flux:table.cell>
+                        <flux:table.cell class="hidden md:table-cell">
                             @if (empty($perfil->palavras_chave))
                                 <flux:text class="text-zinc-500">todas</flux:text>
                             @else
@@ -225,7 +237,7 @@ new #[Title('Perfis de busca')] class extends Component
                             @endif
                         </flux:table.cell>
 
-                        <flux:table.cell>
+                        <flux:table.cell class="hidden md:table-cell">
                             <flux:text>
                                 {{ empty($perfil->ufs) ? 'Brasil' : implode(', ', $perfil->ufs) }}
                             </flux:text>
@@ -237,7 +249,7 @@ new #[Title('Perfis de busca')] class extends Component
                             </flux:text>
                         </flux:table.cell>
 
-                        <flux:table.cell>
+                        <flux:table.cell class="hidden lg:table-cell">
                             @if ($perfil->valor_min === null && $perfil->valor_max === null)
                                 <flux:text class="text-zinc-500">sem faixa</flux:text>
                             @else
@@ -249,7 +261,7 @@ new #[Title('Perfis de busca')] class extends Component
                             @endif
                         </flux:table.cell>
 
-                        <flux:table.cell>
+                        <flux:table.cell class="hidden lg:table-cell">
                             <flux:switch
                                 :checked="$perfil->ativo"
                                 wire:click="alternarAtivo({{ $perfil->id }})"
@@ -257,19 +269,26 @@ new #[Title('Perfis de busca')] class extends Component
                             />
                         </flux:table.cell>
 
-                        <flux:table.cell class="text-end">
-                            <flux:button size="sm" variant="ghost" icon="pencil-square" wire:click="editar({{ $perfil->id }})">
-                                Editar
+                        <flux:table.cell class="text-end whitespace-nowrap">
+                            <flux:button
+                                size="sm"
+                                variant="ghost"
+                                icon="pencil-square"
+                                :aria-label="'Editar perfil '.$perfil->nome"
+                                wire:click="editar({{ $perfil->id }})"
+                            >
+                                <span class="hidden md:inline">Editar</span>
                             </flux:button>
                             <flux:button
                                 size="sm"
                                 variant="ghost"
                                 icon="trash"
                                 class="text-red-600 dark:text-red-400"
+                                :aria-label="'Remover perfil '.$perfil->nome"
                                 wire:click="excluir({{ $perfil->id }})"
                                 wire:confirm="Remover o perfil “{{ $perfil->nome }}”?"
                             >
-                                Remover
+                                <span class="hidden md:inline">Remover</span>
                             </flux:button>
                         </flux:table.cell>
                     </flux:table.row>
