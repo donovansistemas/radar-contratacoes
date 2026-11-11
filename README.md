@@ -4,7 +4,11 @@ Monitoramento de contratações públicas brasileiras. O usuário cadastra perfi
 (palavra-chave, UF, modalidade, faixa de valor), um comando importa as contratações abertas
 do **PNCP** e o sistema mostra só o que casa com esses perfis — com link direto para o edital.
 
+![Dashboard](docs/dashboard.jpeg)
+*Dashboard: o que os seus perfis estão encontrando no PNCP agora.*
+
 ![Tela de oportunidades](docs/oportunidades.jpeg)
+*Oportunidades: contratações que ainda aceitam proposta, ordenadas pelo prazo.*
 
 > **Estado: v0.1.** O que está nesta página foi implementado e testado. O que não está,
 > aparece na seção [O que ainda não existe](#o-que-ainda-não-existe) — sem promessa.
@@ -18,18 +22,21 @@ do **PNCP** e o sistema mostra só o que casa com esses perfis — com link dire
 | Importação | `php artisan radar:importar` busca `/v1/contratacoes/proposta` e faz upsert por `numero_controle_pncp` |
 | Motor de match | cruza contratação × perfil com sinônimos, exclusão e normalização de acento |
 | Listagem | oportunidades abertas ordenadas pelo prazo, com órgão, município, valor e link oficial |
+| Dashboard | totais e valor somado, por UF, modalidade, faixa de valor e mês de encerramento |
 
 Rodar a importação duas vezes seguidas **não duplica** nada: a chave de deduplicação é o
 `numeroControlePNCP` que o próprio PNCP gera.
 
 ## O que ainda não existe
 
-- **Dashboard** com totais por UF, modalidade e evolução mensal
 - **Agendamento** da importação (`schedule:run` diário)
 - **Alerta por e-mail ou Telegram** quando aparece oportunidade nova
 - **Histórico** de oportunidade vista / salva / descartada
 - **Consulta de CNPJ na BrasilAPI** (dados do fornecedor)
 - **Deploy** em URL pública
+- **Série histórica** de verdade no dashboard. O gráfico "encerramento por mês" é a
+  distribuição das oportunidades *abertas* pelos próximos meses, não a evolução das
+  importações ao longo do tempo — para isso o banco precisa acumular histórico.
 
 ## Stack
 
@@ -126,7 +133,7 @@ repositório.
 
 ```bash
 php artisan test
-# 90 testes, 238 asserções
+# 101 testes, 271 asserções
 ```
 
 O client do PNCP é testado contra uma resposta **real** da API, guardada em
