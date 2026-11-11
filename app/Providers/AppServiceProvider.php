@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Pncp\PncpClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(PncpClient::class, fn (): PncpClient => new PncpClient(
+            baseUrl: (string) config('pncp.base_url'),
+            timeout: (int) config('pncp.timeout'),
+            retryTimes: (int) config('pncp.retry.times'),
+            retrySleep: (int) config('pncp.retry.sleep'),
+        ));
     }
 
     /**
