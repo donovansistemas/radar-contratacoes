@@ -90,6 +90,25 @@ it('recusa faixa de valor invertida', function () {
     expect(PerfilBusca::count())->toBe(0);
 });
 
+it('mostra a mensagem de faixa invertida uma única vez', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->from(route('perfis-classico.create'))
+        ->post(route('perfis-classico.store'), dadosDoPerfil([
+            'valor_min' => '90000',
+            'valor_max' => '1000',
+        ]));
+
+    // A mensagem vem no flash de erro da sessão, na requisição seguinte.
+    $html = $this->actingAs($user)
+        ->get(route('perfis-classico.create'))
+        ->assertOk()
+        ->getContent();
+
+    expect(substr_count($html, 'não pode ser menor que o mínimo'))->toBe(1);
+});
+
 it('recusa UF inexistente', function () {
     $user = User::factory()->create();
 

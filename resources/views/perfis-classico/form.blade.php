@@ -116,8 +116,9 @@
                     value="{{ old('valor_max', $perfil->valor_max) }}"
                 />
             </div>
-            <flux:error name="valor_max" />
-            <flux:error name="valor_min" />
+
+            {{-- Os dois campos acima têm `label`, e por isso já renderizam o
+                 próprio erro. Um <flux:error> aqui duplicaria a mensagem. --}}
 
             {{-- Checkbox sozinho: um hidden garante que "desmarcado" chegue como 0 --}}
             <input type="hidden" name="ativo" value="0">
