@@ -68,6 +68,20 @@ it('recusa faixa de valor invertida', function () {
     expect(PerfilBusca::count())->toBe(0);
 });
 
+it('mostra a mensagem de faixa invertida uma única vez', function () {
+    $componente = Livewire::actingAs(User::factory()->create())
+        ->test('pages::perfis.index')
+        ->call('novo')
+        ->set('nome', 'Faixa errada')
+        ->set('valorMin', '90000')
+        ->set('valorMax', '1000')
+        ->call('salvar');
+
+    // `flux:input` com `label` já renderiza o próprio erro; um <flux:error>
+    // extra depois do campo duplicava a mensagem na tela.
+    expect(substr_count($componente->html(), 'não pode ser menor que o mínimo'))->toBe(1);
+});
+
 it('edita um perfil existente', function () {
     $user = User::factory()->create();
     $perfil = PerfilBusca::factory()->for($user)->create(['nome' => 'Antigo']);

@@ -351,7 +351,8 @@ new #[Title('Perfis de busca')] class extends Component
                 <flux:input wire:model="valorMin" label="Valor mínimo (R$)" type="number" step="0.01" min="0" placeholder="sem mínimo" />
                 <flux:input wire:model="valorMax" label="Valor máximo (R$)" type="number" step="0.01" min="0" placeholder="sem teto" />
             </div>
-            <flux:error name="valorMax" />
+            {{-- Os dois campos acima têm `label`, então já exibem o próprio erro.
+                 Um <flux:error> aqui mostraria a mesma mensagem duas vezes. --}}
 
             <flux:switch wire:model="ativo" label="Perfil ativo" description="Desligado, o perfil não é usado na busca." />
 
