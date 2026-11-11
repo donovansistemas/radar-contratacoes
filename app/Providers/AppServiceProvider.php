@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Match\MotorDeMatch;
 use App\Services\Pncp\PncpClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -22,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
             retryTimes: (int) config('pncp.retry.times'),
             retrySleep: (int) config('pncp.retry.sleep'),
         ));
+
+        $this->app->bind(MotorDeMatch::class, fn (): MotorDeMatch => MotorDeMatch::aPartirDaConfig());
     }
 
     /**

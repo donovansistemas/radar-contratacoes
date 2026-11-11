@@ -123,7 +123,8 @@ it('não repete erro de cliente e propaga a mensagem do PNCP', function () {
     Http::assertSentCount(1);
 });
 
-it('repete quando o PNCP devolve erro de servidor', function () {    Http::fake(['*' => Http::sequence()
+it('repete quando o PNCP devolve erro de servidor', function () {
+    Http::fake(['*' => Http::sequence()
         ->push('erro interno', 500)
         ->push($this->payload, 200)]);
 
