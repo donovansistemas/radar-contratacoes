@@ -133,7 +133,7 @@ repositório.
 
 ```bash
 php artisan test
-# 101 testes, 271 asserções
+# 102 testes, 272 asserções
 ```
 
 O client do PNCP é testado contra uma resposta **real** da API, guardada em
