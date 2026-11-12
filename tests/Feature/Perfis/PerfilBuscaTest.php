@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Perfis;
 use App\Models\PerfilBusca;
 use App\Models\User;
 use Livewire\Livewire;
@@ -19,7 +20,7 @@ it('cria um perfil a partir dos campos do formulário', function () {
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
-        ->test('pages::perfis.index')
+        ->test(Perfis::class)
         ->call('novo')
         ->set('nome', 'Uniformes escolares')
         ->set('palavrasChave', 'uniforme, fardamento; farda')
@@ -46,7 +47,7 @@ it('cria um perfil a partir dos campos do formulário', function () {
 
 it('recusa perfil sem nome', function () {
     Livewire::actingAs(User::factory()->create())
-        ->test('pages::perfis.index')
+        ->test(Perfis::class)
         ->call('novo')
         ->set('nome', '')
         ->call('salvar')
@@ -57,7 +58,7 @@ it('recusa perfil sem nome', function () {
 
 it('recusa faixa de valor invertida', function () {
     Livewire::actingAs(User::factory()->create())
-        ->test('pages::perfis.index')
+        ->test(Perfis::class)
         ->call('novo')
         ->set('nome', 'Faixa errada')
         ->set('valorMin', '90000')
@@ -70,7 +71,7 @@ it('recusa faixa de valor invertida', function () {
 
 it('mostra a mensagem de faixa invertida uma única vez', function () {
     $componente = Livewire::actingAs(User::factory()->create())
-        ->test('pages::perfis.index')
+        ->test(Perfis::class)
         ->call('novo')
         ->set('nome', 'Faixa errada')
         ->set('valorMin', '90000')
@@ -87,7 +88,7 @@ it('edita um perfil existente', function () {
     $perfil = PerfilBusca::factory()->for($user)->create(['nome' => 'Antigo']);
 
     Livewire::actingAs($user)
-        ->test('pages::perfis.index')
+        ->test(Perfis::class)
         ->call('editar', $perfil->id)
         ->assertSet('nome', 'Antigo')
         ->set('nome', 'Novo nome')
@@ -103,7 +104,7 @@ it('não deixa editar perfil de outro usuário', function () {
     $perfil = PerfilBusca::factory()->for($dono)->create();
 
     Livewire::actingAs($intruso)
-        ->test('pages::perfis.index')
+        ->test(Perfis::class)
         ->call('editar', $perfil->id)
         ->assertStatus(404);
 });
@@ -114,7 +115,7 @@ it('não deixa remover perfil de outro usuário', function () {
     $perfil = PerfilBusca::factory()->for($dono)->create();
 
     Livewire::actingAs($intruso)
-        ->test('pages::perfis.index')
+        ->test(Perfis::class)
         ->call('excluir', $perfil->id)
         ->assertStatus(404);
 
@@ -126,7 +127,7 @@ it('remove o próprio perfil', function () {
     $perfil = PerfilBusca::factory()->for($user)->create();
 
     Livewire::actingAs($user)
-        ->test('pages::perfis.index')
+        ->test(Perfis::class)
         ->call('excluir', $perfil->id)
         ->assertHasNoErrors();
 
@@ -138,7 +139,7 @@ it('liga e desliga o perfil', function () {
     $perfil = PerfilBusca::factory()->for($user)->create(['ativo' => true]);
 
     Livewire::actingAs($user)
-        ->test('pages::perfis.index')
+        ->test(Perfis::class)
         ->call('alternarAtivo', $perfil->id);
 
     expect($perfil->refresh()->ativo)->toBeFalse();
