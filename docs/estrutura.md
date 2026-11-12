@@ -1,34 +1,54 @@
 # Estrutura do projeto — onde fica cada coisa
 
-## Antes de tudo: aqui não existe controller separado da view
+## Dois jeitos de escrever uma tela (os dois estão aqui)
 
-Este projeto usa **Livewire 4 com componentes single-file**. Cada tela é **um único arquivo**:
+O projeto usa **Livewire 4**, e o Livewire aceita as duas formas. Escolhemos por tamanho de
+tela — o critério está explicado no fim desta seção.
+
+**1. Arquivo único** — `/dashboard` e `/oportunidades`. Controller e view no mesmo arquivo:
 
 ```
-resources/views/pages/perfis/⚡index.blade.php
-                             │
-                             ├── topo  → <?php ... class extends Component { ... }
-                             │           isto é o CONTROLLER: propriedades = estado,
-                             │           métodos públicos = ações
-                             │
-                             └── baixo → <section> ... </section>
-                                         isto é a VIEW (Blade + Flux)
+resources/views/pages/dashboard/⚡index.blade.php
+                                │
+                                ├── topo  → <?php ... class extends Component { ... }
+                                │           isto é o CONTROLLER: propriedades = estado,
+                                │           métodos públicos = ações
+                                │
+                                └── baixo → <section> ... </section>
+                                            isto é a VIEW (Blade + Flux)
 ```
 
-O `⚡` faz parte do nome do arquivo (U+26A1). É a convenção do Livewire para
-componente de arquivo único. `app/Http/Controllers/` está vazio de propósito — o kit só
-mantém o `Controller.php` base, sem uso.
-
-Quem liga URL → arquivo é `Route::livewire()`:
+O `⚡` faz parte do nome do arquivo (U+26A1). É a convenção do Livewire para componente de
+arquivo único, ligado por `Route::livewire()`:
 
 ```php
-// routes/web.php
-Route::livewire('perfis', 'pages::perfis.index');
-//                 ↑ URL     ↑ namespace "pages::" = resources/views/pages
+Route::livewire('dashboard', 'pages::dashboard.index');
+//                 ↑ URL       ↑ namespace "pages::" = resources/views/pages
 ```
+
+**2. Classe + view separadas** — `/perfis`. É o formato tradicional do Livewire e o mais
+próximo do Adianti (classe da página + template):
+
+```
+app/Livewire/Perfis.php                    ← controller (estado e ações)
+resources/views/livewire/perfis.blade.php  ← view (só Blade, sem <?php no topo>)
+```
+
+```php
+Route::get('perfis', Perfis::class)->name('perfis.index');
+//                   ↑ passa a CLASSE, não a string "pages::..."
+```
+
+Dentro da classe, `render()` devolve a view e o hook `with()` injeta os dados nela.
+
+**Por que assim:** arquivo único é ótimo até ~150–200 linhas. Passou disso, separar deixa a
+view legível sozinha e o PHP testável sem carregar marcação. `/perfis` era a maior tela do
+projeto (380 linhas) e foi separada.
 
 O namespace `pages::` e o layout padrão (`layouts::app`) vêm do `config/livewire.php` do
 pacote — não são configuração nossa.
+
+`app/Http/Controllers/` só tem o `Controller.php` base do kit, sem uso.
 
 ## Árvore
 
@@ -41,6 +61,10 @@ radar-contratacoes/
 │   └── settings.php ............ rotas de perfil/segurança (kit)
 │
 ├── app/
+│   ├── Livewire/
+│   │   ├── Perfis.php ........... controller da tela /perfis (classe + view separadas)
+│   │   └── Actions/Logout.php ... kit
+│   │
 │   ├── Models/
 │   │   ├── Contratacao.php ..... tabela `contratacoes` (scopes, urlPncp())
 │   │   ├── PerfilBusca.php ..... tabela `perfis_busca` (casts, termosDeBusca())
@@ -70,12 +94,14 @@ radar-contratacoes/
 │   └── Concerns/ ................ regras de validação do kit
 │
 ├── resources/views/
-│   ├── pages/ ................... AS TELAS (controller + view no mesmo arquivo)
+│   ├── pages/ ................... TELAS em arquivo único (controller + view juntos)
 │   │   ├── dashboard/⚡index.blade.php
 │   │   ├── oportunidades/⚡index.blade.php
-│   │   ├── perfis/⚡index.blade.php
 │   │   ├── auth/ ................ login, cadastro, etc (kit)
 │   │   └── settings/ ............ perfil, segurança (kit)
+│   │
+│   ├── livewire/
+│   │   └── perfis.blade.php ..... view da tela /perfis (par de App\Livewire\Perfis)
 │   │
 │   ├── components/
 │   │   └── barra.blade.php ...... barrinha de proporção do dashboard (nosso)
@@ -101,7 +127,7 @@ radar-contratacoes/
     ├── Pncp/PncpClientTest.php ................ 14 testes (fixture real da API)
     ├── Console/ImportarContratacoesTest.php ... 6 testes (deduplicação)
     ├── Match/MotorDeMatchTest.php ............. 15 testes (regras do match)
-    ├── Perfis/PerfilBuscaTest.php ............. 10 testes (CRUD + isolamento)
+    ├── Perfis/PerfilBuscaTest.php ............. 11 testes (CRUD + isolamento)
     ├── Oportunidades/OportunidadesTest.php .... 7 testes
     └── Dashboard/ResumoDoRadarTest.php ........ 7 testes (agregação)
         Dashboard/DashboardPageTest.php ........ 4 testes (tela)
@@ -111,8 +137,8 @@ radar-contratacoes/
 
 | Adianti | Neste projeto |
 |---|---|
-| Classe de controle (`extends TPage`) | classe anônima no topo de `⚡index.blade.php` |
-| Arquivo `.xml` da tela | a parte de baixo do mesmo arquivo (Blade) |
+| Classe de controle (`extends TPage`) | `App\Livewire\Perfis` (ou a classe dentro do `⚡index.blade.php`) |
+| Arquivo `.xml` da tela | `resources/views/livewire/perfis.blade.php` (ou a parte de baixo do `⚡index`) |
 | `onShow` / `onEdit` / `onSave` | `mount()` / `editar()` / `salvar()` |
 | `TSession::setValue()` | propriedades públicas do componente |
 | `TField`, `TCombo`, `TCheck` | `flux:input`, `flux:select`, `flux:checkbox` |
@@ -122,36 +148,40 @@ radar-contratacoes/
 | `TRecord` | `app/Models/**` |
 | `$this->form->setData()` | ligação automática via `wire:model` |
 | Registro no `menu.xml` | `resources/views/layouts/app/sidebar.blade.php` |
-| `TApplication::run()` | `routes/web.php` + `Route::livewire()` |
+| `TApplication::run()` | `routes/web.php` |
 
 ## O fluxo real, de ponta a ponta
 
-Abrir `/oportunidades`:
+Abrir `/perfis` (o único com classe e view separadas):
 
 ```
 1. routes/web.php
-   Route::livewire('oportunidades', 'pages::oportunidades.index')
+   Route::get('perfis', Perfis::class)
         ↓
-2. resources/views/pages/oportunidades/⚡index.blade.php
-   with() → app(MotorDeMatch::class)
+2. app/Livewire/Perfis.php
+   mount() carrega o estado; with() monta a lista de perfis do usuário
         ↓
-3. app/Services/Match/MotorDeMatch.php
-   candidatos() → SQL em app/Models/Contratacao.php
-   avalia()     → app/Support/Texto.php (acento, plural, sinônimo de config/radar.php)
+3. app/Models/PerfilBusca.php
+   Auth::user()->perfisBusca()  ← query já limitada ao dono
         ↓
-4. Blade renderiza <flux:card> por oportunidade
+4. render() → resources/views/livewire/perfis.blade.php
    layout: resources/views/layouts/app.blade.php
         ↓
-5. clique em "Editar" num perfil → wire:click="editar(3)"
+5. clique em "Editar" → wire:click="editar(3)"
    volta para o passo 2, método editar() roda no servidor
 ```
+
+O mesmo fluxo em `/oportunidades`, trocando o passo 2 pelo `⚡index.blade.php` e o 3 pelo
+`MotorDeMatch`.
 
 ## Onde mexer para cada tarefa
 
 | Quero… | Vou em |
 |---|---|
-| mudar texto/botão de uma tela | parte Blade do `⚡index.blade.php` da tela |
+| mudar texto/botão da tela de perfis | `resources/views/livewire/perfis.blade.php` |
+| mudar texto/botão de dashboard ou oportunidades | parte Blade do `⚡index.blade.php` |
 | criar uma tela nova | `resources/views/pages/<nome>/⚡index.blade.php` + `Route::livewire()` |
+| criar tela nova com classe separada | `php artisan make:livewire <Nome>` + `Route::get()` |
 | mudar regra de match | `app/Services/Match/MotorDeMatch.php` |
 | adicionar sinônimo | `config/radar.php` → `sinonimos` |
 | liberar modalidade nova | `config/radar.php` → `modalidades` |
@@ -165,48 +195,14 @@ Abrir `/oportunidades`:
 
 ## Três coisas que confundem no começo
 
-1. **Não existe "controller" para procurar.** Se você procura `PerfilBuscaController`, não
-   existe: está dentro do `⚡index.blade.php`.
+1. **Procurar "controller" pode frustrar.** Em `/perfis` ele está em `app/Livewire/Perfis.php`;
+   em `/dashboard` e `/oportunidades`, dentro do `⚡index.blade.php`. Não há um padrão único de
+   pasta porque o Livewire aceita os dois formatos.
 2. **Método público do componente = ação chamável do navegador.** Qualquer `public function`
    ali pode ser disparado por `wire:click`. É a mesma lógica de método de tela do Adianti,
    mas sem `TButton` amarrando.
 3. **`app/Services` não é do framework.** É convenção nossa, criada porque o projeto tem
    regra de negócio que não pertence nem ao model nem à tela.
-
-## Espelho clássico (MVC) — `/perfis-classico`
-
-A mesma tela de perfis implementada do jeito tradicional, para comparação. **Não substitui a
-versão Livewire**: o produto continua em `/perfis`. Esta existe para mostrar as duas
-arquiteturas lado a lado, com o mesmo comportamento e os mesmos testes de isolamento.
-
-| Arquivo | Papel |
-|---|---|
-| `app/Http/Controllers/PerfilBuscaController.php` | o controller: um método por verbo HTTP |
-| `app/Http/Requests/PerfilBuscaRequest.php` | validação + conversão do formulário |
-| `resources/views/perfis-classico/index.blade.php` | lista |
-| `resources/views/perfis-classico/form.blade.php` | formulário único para criar e editar |
-| `routes/web.php` → `Route::resource` | as 6 rotas REST geradas de uma vez |
-| `tests/Feature/Perfis/PerfilBuscaClassicoTest.php` | 12 testes |
-
-### A mesma preocupação, resolvida nos dois mundos
-
-| Preocupação | Livewire (`/perfis`) | Clássico (`/perfis-classico`) |
-|---|---|---|
-| onde fica a ação | método público no `⚡index.blade.php` | método do controller |
-| validação | `$this->validate([...])` no componente | `FormRequest` |
-| estado do formulário | propriedades públicas + `wire:model` | `old()` + o model |
-| envio | `wire:click` / `wire:submit`, sem recarregar | `POST`/`PUT` real, recarrega a página |
-| resposta ao gravar | re-render parcial | `redirect()->route()->with('status')` |
-| mensagem de sucesso | `Flux::toast()` | `session('status')` no Blade |
-| remover | `wire:click` + `wire:confirm` | `<form>` com `@csrf` + `@method('DELETE')` |
-| listar | `with()` monta os dados | controller passa `$perfis` para a view |
-| id de outro dono | `findOrFail` na relação do usuário | `abort_unless(..., 403)` |
-| teste | `Livewire::test()` | `$this->get/post/put/delete()` |
-| arquivos por tela | **1** | **3** (controller + 2 views) |
-
-O clássico exige mais arquivo e mais código de ligação — `@csrf`, `@method`, `old()`,
-`redirect`, flash. Em troca, cada ação é uma requisição HTTP explícita, fácil de ler em log e
-de cachear.
 
 ## O que é do starter kit (não escrevemos)
 `app/Actions/Fortify/`, `app/Concerns/`, `app/Providers/FortifyServiceProvider.php`,
